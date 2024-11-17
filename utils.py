@@ -6,6 +6,7 @@ class TreeNode:
         """
         self.childern = {}
         self.val = val
+        self.majority_label = ...
 
     def is_decision_node(self) -> bool:
         """

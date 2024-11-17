@@ -188,15 +188,14 @@ class DecisionTree(MachineLearningTemplate):
 
         print("All Gini impurity tests passed!")
 
-    def train(self, hyperParams: dict, X, y):
-        """ """
+    def train(self, hyperParams: dict, X, y) -> "DecisionTree":
+        """Train DecisionTree on input Data"""
 
         queried = []
-        self.learned = self.train_helper(hyperParams, X, y, queried)
+        self.hyperParams = hyperParams
+        self.node = self.train_helper(hyperParams, X, y, queried).node
         self.paramsAssigned = True
-        if DEBUG_FLAG_PRINT:
-            print(self.learned.node.val)
-        return self.learned
+        return self
 
     def predict(self, X) -> list:
         if not self.paramsAssigned:
@@ -204,19 +203,22 @@ class DecisionTree(MachineLearningTemplate):
                 "Please Call train before calling the predict  function"
             )
         z = []
-        for row_index in range(X.shape[0]):
-            curr_node = DecisionTree(True, self.getHyperParameters(), self.node)
-            while not curr_node.node.is_decision_node():
-                feature_value = X[row_index, curr_node.node.val]
-                if feature_value not in curr_node.node.childern:
+        for row in X:
+            curr_node = self.node
+            while not curr_node.is_decision_node():
+                feature_value = row[curr_node.val]
+                if feature_value not in curr_node.childern:
                     if DEBUG_FLAG_PRINT:
-                        print("Children in Uknown", curr_node.node.childern.items())
-                    raise ValueError(
-                        f"Unknown feature value {feature_value} encountered during prediction."
-                    )
-                curr_node = self.node.childern[feature_value]
+                        print("Children in Uknown", curr_node.childern.items())
+                    if len(curr_node.childern) > 0:
+                        feature_value = list(curr_node.childern.keys())[0]
+                    else:
+                        raise ValueError(
+                            f"Unknown feature value {feature_value} encountered during prediction."
+                        )
+                curr_node = curr_node.childern[feature_value].node
             # Append the label of the leaf node
-            z.append(int(curr_node.node.val))
+            z.append(int(curr_node.val))
         return z
 
     def train_helper(self, hyperParams: dict, X, y, queried: list):
@@ -334,18 +336,22 @@ class DecisionTree(MachineLearningTemplate):
 
 class RandomForest(MachineLearningTemplate):
     def __init__(
-        self, paramsAssigned: bool, hyperParams, learned, trees: list = [DecisionTree]
+        self,
+        paramsAssigned: bool,
+        hyperParams,
+        learned=None,
+        trees: list = [DecisionTree],
     ):
         super().__init__(paramsAssigned, hyperParams, learned)
-        self.trees = trees
+        self.trees = []
 
     def train(self, hyperParams: dict, X, y):
         num_tree = self.getHyperParameters().get("num_tree")
         if num_tree is None:
             num_tree = 10
 
-        for i in range(num_tree):
-            for j in range(X.shape[0]):
+        for _ in range(num_tree):
+            for _ in range(X.shape[0]):
                 rand1 = np.random.random_integers(0, X.shape[0] - 1)
                 rand2 = np.random.random_integers(0, X.shape[0] - 1)
                 if rand1 == rand2:
@@ -372,6 +378,31 @@ class RandomForest(MachineLearningTemplate):
         z = np.zeros((X.shape[0], 1))
         for i in range(len(self.trees)):
             pred = self.trees[i].predict(X)
-            M[i]
-        print(M)
-        return []
+            pred = np.array(pred)
+            M[:, i] = pred
+
+        # Iterate over each row in M
+        for row_idx in range(M.shape[0]):
+            # Initialize a dictionary to count occurrences of each label
+            label_counts = {}
+
+            # Iterate over columns in the current row
+            for col_idx in range(M.shape[1]):
+                label = M[row_idx, col_idx]
+                if label not in label_counts:
+                    label_counts[label] = 0
+                label_counts[label] += 1
+
+            # Find the label with the greatest count
+            max_label = None
+            max_count = 0
+            for label, count in label_counts.items():
+                if count > max_count:
+                    max_label = label
+                    max_count = count
+
+            # Store the label with the greatest count into z at the current row index
+            z[row_idx, 0] = max_label
+
+        # Return z as a list of predictions
+        return z.tolist()
