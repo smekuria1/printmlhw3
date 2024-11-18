@@ -1,90 +1,143 @@
+# Custom Machine Learning Model Implementation
 
-# ML Decision Tree and Random Forest Models
+## Project Overview
 
-This repository provides an implementation of a custom `DecisionTree` and `RandomForest`, with a comparison against the `sklearn`'s Decision Tree. The code supports running both models using command-line arguments.
+This project provides custom implementations of Decision Tree and Random Forest machine learning algorithms from scratch, along with a flexible training and evaluation framework.
 
-## Prerequisites
+## Features
 
-Make sure you have the following Python packages installed:
+- Custom Decision Tree classifier
+- Custom Random Forest classifier
+- Flexible hyperparameter tuning
+- Multiple dataset support
+- Comparison with scikit-learn implementations
 
-- `numpy`
-- `scikit-learn`
-- Any custom modules or classes you have in `MLclasses`
+## Project Structure
 
-You can install the necessary dependencies using:
+```
+printmlhw3/
+│
+├── MLclasses.py         # Core machine learning model implementations
+├── main.py              # Model training and evaluation script
+├── utils.py             # Utility classes and functions
+└── README.md            # Project documentation
+```
+
+## Dependencies
+
+- NumPy
+- Scikit-learn
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/smekuria1/printmlhw3
+cd printmlhw3
+```
+
+2. Create a virtual environment (optional but recommended):
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+```
+
+3. Install required dependencies:
 
 ```bash
 pip install numpy scikit-learn
 ```
 
-## Running the Script
+## Usage
 
-### Usage
-
-The script requires you to specify the model (`decision_tree` or `random_forest`) via command-line arguments. It will automatically perform a train-test split and evaluate the model's accuracy.
-
-### Command-Line Arguments
-
-- `--model` : Choose which model to run. Options are `decision_tree` or `random_forest`.
-
-### Examples
-
-#### Run the Decision Tree Model
-
-To run the custom and sklearn Decision Tree model:
+### Command-Line Options
 
 ```bash
-python3 main.py --model decision_tree
+python main.py --help
 ```
 
-#### Run the Random Forest Model
+#### Available Arguments
 
-To run the custom Random Forest model:
+- `--model`: Choose model type
+  - `decision_tree`
+  - `random_forest`
+- `--dataset`: Select dataset
+  - `iris`
+  - `breast_cancer`
+  - `wine`
+- `--criterion`: Splitting criterion
+  - `entropy`
+  - `gini`
+- `--n_trees`: Number of trees (for Random Forest)
+- `--sample_size`: Proportion of data sampled for each tree
+
+### Example Commands
+
+1. Train Decision Tree on Iris dataset:
 
 ```bash
-python3 main.py --model random_forest
+python main.py --model decision_tree --dataset iris --criterion entropy
+```
+
+2. Train Random Forest on Breast Cancer dataset:
+
+```bash
+python main.py --model random_forest --dataset breast_cancer --criterion gini --n_trees 20
 ```
 
 ```
 
-## Code Overview
+## Model Implementations
 
-1. **DecisionTree Model**:
-   - Trains a custom Decision Tree model and compares it with `sklearn`'s implementation.
-   - Accuracy is displayed for both implementations.
+### Decision Tree
 
-2. **RandomForest Model**:
-   - Trains a custom Random Forest using multiple decision trees.
-   - Displays the accuracy of the predictions.
+- Supports entropy and Gini impurity as splitting criteria
+- Recursive tree construction
+- Custom implementation of impurity calculations
 
-## Dataset
+### Random Forest
 
-The script uses the `Iris` dataset from `sklearn.datasets`, a standard dataset for classification problems.
+- Bootstrap sampling
+- Majority voting for predictions
+- Configurable number of trees
+- Supports different datasets and error functions
 
-## Output
+## Customization
 
-The output of the script will include the prediction accuracy for the selected model:
+### Hyperparameters
 
-```
+- `error_function`: Choose between 'entropy' and 'gini'
+- `num_tree`: Set number of trees for Random Forest
+- `sample_size`: Control bootstrap sampling proportion
 
-Decision Tree Accuracy: XX.X%
+## Performance Evaluation
 
-```
+The script compares custom implementations with scikit-learn's built-in models, providing:
 
-or 
+- Training accuracy
+- Testing accuracy
+- Side-by-side performance comparison
 
-```
+## Supported Datasets
 
-Random Forest Accuracy: XX.X%
+1. Iris Dataset
+   - Multi-class classification
+   - 4 features
+   - 3 classes
 
-```
+2. Breast Cancer Dataset
+   - Binary classification
+   - 30 features
+   - Medical diagnosis problem
 
-where `XX.X` is the calculated accuracy percentage.
+3. Wine Dataset
+   - Multi-class classification
+   - 13 features
+   - 3 wine types
 
-## Contributing
-
-If you'd like to contribute, feel free to fork this repository and submit a pull request. Please make sure to include tests for any new functionality.
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+Distributed under the MIT License. See `LICENSE` for more information.

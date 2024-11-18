@@ -340,7 +340,6 @@ class RandomForest(MachineLearningTemplate):
         paramsAssigned: bool,
         hyperParams,
         learned=None,
-        trees: list = [DecisionTree],
     ):
         super().__init__(paramsAssigned, hyperParams, learned)
         self.trees = []
@@ -350,23 +349,24 @@ class RandomForest(MachineLearningTemplate):
         if num_tree is None:
             num_tree = 10
 
+        n_samples = int(X.shape[0] * self.getHyperParameters()["sample_size"])
+
         for _ in range(num_tree):
-            for _ in range(X.shape[0]):
-                rand1 = np.random.random_integers(0, X.shape[0] - 1)
-                rand2 = np.random.random_integers(0, X.shape[0] - 1)
-                if rand1 == rand2:
-                    continue
-                temp = X[rand1]
-                X[rand1] = X[rand2]
-                X[rand2] = temp
-                temp2 = y[rand1]
-                y[rand1] = y[rand2]
-                y[rand2] = temp2
+            # rand1 = np.random.random_integers(0, X.shape[0] - 1)
+            # rand2 = np.random.random_integers(0, X.shape[0] - 1)
+            indices = np.random.choice(len(X), size=n_samples, replace=True)
 
-            index = int(0.8 * len(X))
+            # if rand1 == rand2:
+            #     continue
+            # temp = X[rand1]
+            # X[rand1] = X[rand2]
+            # X[rand2] = temp
+            # temp2 = y[rand1]
+            # y[rand1] = y[rand2]
+            # y[rand2] = temp2
 
-            X_prime = X[:index]
-            y_prime = y[:index]
+            X_prime = X[indices]
+            y_prime = y[indices]
 
             decisionTree = DecisionTree(False, hyperParams, TreeNode(0))
             model = decisionTree.train(hyperParams, X_prime, y_prime)
