@@ -5,6 +5,7 @@ from utils import TreeNode
 
 DEBUG_FLAG_PRINT = False
 DEBUG_FLAG_TEST = False
+APPROXIMATION_FLAG = True
 
 
 class MachineLearningTemplate:
@@ -198,6 +199,32 @@ class DecisionTree(MachineLearningTemplate):
         return self
 
     def predict(self, X) -> list:
+        """Predict DecisionTree on input Data
+        Parameters:
+        ----------
+        X : list or array-like
+            Input data to predict, where each element is a feature vector.
+
+        Returns:
+        -------
+        list
+            A list of predicted labels for each input feature vector in X.
+
+        NOTE:
+            There is a small approximation function that finds the closest value to an unseen from the
+            childern of the current node.
+            I was working with Continous datasets unknowingly if were are getting properly discrete
+            feature values it is less likely we run into the code branch I hope to fix this someday
+        Raises:
+        ------
+        AssertionError
+            If the model has not been trained yet (`paramsAssigned` is False).
+
+        ValueError
+            If an unknown feature value is encountered during prediction and cannot be handled.
+
+        """
+
         if not self.paramsAssigned:
             raise AssertionError(
                 "Please Call train before calling the predict  function"
@@ -208,10 +235,22 @@ class DecisionTree(MachineLearningTemplate):
             while not curr_node.is_decision_node():
                 feature_value = row[curr_node.val]
                 if feature_value not in curr_node.childern:
-                    if DEBUG_FLAG_PRINT:
-                        print("Children in Uknown", curr_node.childern.items())
+                    approximation = None
+                    if APPROXIMATION_FLAG:
+                        key_list = list(curr_node.childern.keys())
+                        approximation = self.find_closest_feature(
+                            key_list, feature_value
+                        )
                     if len(curr_node.childern) > 0:
-                        feature_value = list(curr_node.childern.keys())[0]
+                        print(
+                            f"Unseen feature value {feature_value}, Approximation {approximation}"
+                        )
+                        feature_value = (
+                            list(curr_node.childern.keys())[0]
+                            if not APPROXIMATION_FLAG
+                            else approximation
+                        )
+
                     else:
                         raise ValueError(
                             f"Unknown feature value {feature_value} encountered during prediction."
@@ -221,7 +260,52 @@ class DecisionTree(MachineLearningTemplate):
             z.append(int(curr_node.val))
         return z
 
+    def find_closest_feature(self, lst, target):
+        """Finds the closest number to a target in a list."""
+
+        closest = lst[0]
+        min_diff = abs(target - closest)
+
+        for num in lst:
+            diff = abs(target - num)
+            if diff < min_diff:
+                min_diff = diff
+                closest = num
+
+        return closest
+
     def train_helper(self, hyperParams: dict, X, y, queried: list):
+        """
+        Recursive helper function to train a Decision Tree.
+
+        Parameters:
+        ----------
+        hyperParams : dict
+            A dictionary of hyperparameters, including the error function to use
+            (either 'entropy' or 'gini').
+
+        X : list or array-like
+            The feature matrix, where each element is a feature vector.
+
+        y : list
+            The target labels corresponding to each row in `X`.
+
+        queried : list
+            A list of indices representing the features that have been queried
+            in previous splits.
+
+        Returns:
+        -------
+        DecisionTree
+            A trained DecisionTree object.
+
+        Raises:
+        ------
+        ValueError
+            If an unsupported error function is specified.
+        """
+
+        # Base case: if all features values have been queried, create a leaf node with the majority label
         if len(queried) == len(y):
             labels = {}
             for label in y:
@@ -236,6 +320,7 @@ class DecisionTree(MachineLearningTemplate):
             node = TreeNode(majority)
             return DecisionTree(True, hyperParams, node)
 
+        # Calculate the base error using the specified error function
         base_error = None
         error_function = hyperParams["error_function"]
         if error_function == "entropy":
@@ -247,11 +332,14 @@ class DecisionTree(MachineLearningTemplate):
 
         feature_value_indices = {}
         feature_error_change = {}
+
+        # Iterate over all features to find the best split
         for c in range(len(X[0])):
             if c in queried:
                 continue
             feature_value_indices[c] = {}
 
+            # Group row indices by feature values for feature `c`
             for r in range(len(X)):
                 feature_value = X[r][c]
 
@@ -262,6 +350,7 @@ class DecisionTree(MachineLearningTemplate):
                 feature_value_indices[c][feature_value].append(r)
 
             accumulated_error_change = 0.0
+            # Calculate error reduction for each unique feature value
             for v in feature_value_indices[c]:
                 # Create label vector y_f,v for current spliddt
                 y_f_v = []
@@ -329,7 +418,6 @@ class DecisionTree(MachineLearningTemplate):
             )
             node.childern[value] = child_node
 
-            # TO-DO: (Final Wrap-Up)
             # Return the pointer to the current node
         return DecisionTree(True, hyperParams, node)
 
@@ -345,6 +433,23 @@ class RandomForest(MachineLearningTemplate):
         self.trees = []
 
     def train(self, hyperParams: dict, X, y):
+        """
+        Train the Random Forest using bootstrapped samples and Decision Trees.
+
+        Parameters:
+        ----------
+        hyperParams : dict
+            Hyperparameters for the Random Forest. Includes 'num_tree'
+            (number of trees to train) and 'sample_size' (fraction of
+            data to sample for each tree).
+
+        X : array-like
+            Feature matrix for training.
+
+        y : array-like
+            Target labels for training.
+
+        """
         num_tree = self.getHyperParameters().get("num_tree")
         if num_tree is None:
             num_tree = 10
@@ -352,18 +457,7 @@ class RandomForest(MachineLearningTemplate):
         n_samples = int(X.shape[0] * self.getHyperParameters()["sample_size"])
 
         for _ in range(num_tree):
-            # rand1 = np.random.random_integers(0, X.shape[0] - 1)
-            # rand2 = np.random.random_integers(0, X.shape[0] - 1)
-            indices = np.random.choice(len(X), size=n_samples, replace=True)
-
-            # if rand1 == rand2:
-            #     continue
-            # temp = X[rand1]
-            # X[rand1] = X[rand2]
-            # X[rand2] = temp
-            # temp2 = y[rand1]
-            # y[rand1] = y[rand2]
-            # y[rand2] = temp2
+            indices = np.random.choice(len(X), size=n_samples, replace=False)
 
             X_prime = X[indices]
             y_prime = y[indices]
@@ -373,6 +467,20 @@ class RandomForest(MachineLearningTemplate):
             self.trees.append(model)
 
     def predict(self, X) -> list:
+        """
+        Predict the labels for the input data using majority voting from all trees.
+
+        Parameters:
+        ----------
+        X : array-like
+            Feature matrix for which predictions are made.
+
+        Returns:
+        -------
+        list
+            A list of predicted labels for the input data.
+
+        """
         M = np.zeros((X.shape[0], self.getHyperParameters()["num_tree"]))
 
         z = np.zeros((X.shape[0], 1))

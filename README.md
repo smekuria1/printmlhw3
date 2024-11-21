@@ -75,13 +75,13 @@ python main.py --help
 
 ### Example Commands
 
-1. Train Decision Tree on Iris dataset:
+1. Train Decision Tree on Iris dataset:(Best dataset to work with for now due to Continuous vs Discrete Data I did not take into account)
 
 ```bash
 python main.py --model decision_tree --dataset iris --criterion entropy
 ```
 
-2. Train Random Forest on Breast Cancer dataset:
+2. Train Random Forest on Breast Cancer dataset:(Uses Approximation)
 
 ```bash
 python main.py --model random_forest --dataset breast_cancer --criterion gini --n_trees 20
@@ -107,7 +107,8 @@ python main.py --model random_forest --dataset breast_cancer --criterion gini --
 ## Customization
 
 ### Hyperparameters
-
+- 'APPROXIMATION_FLAG' in MLClasses.py to turn approximation on or off not really a hyperparameter just a 
+  Temp fix to make the code run
 - `error_function`: Choose between 'entropy' and 'gini'
 - `num_tree`: Set number of trees for Random Forest
 - `sample_size`: Control bootstrap sampling proportion
@@ -122,6 +123,7 @@ The script compares custom implementations with scikit-learn's built-in models, 
 
 ## Supported Datasets
 
+Binning Applied only to Iris(Simple Rounding need to improve with special cases when i get time)
 1. Iris Dataset
    - Multi-class classification
    - 4 features

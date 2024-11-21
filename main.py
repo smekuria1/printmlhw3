@@ -1,4 +1,5 @@
 import argparse
+import math
 import numpy as np
 from sklearn import tree, ensemble
 from sklearn.metrics import accuracy_score
@@ -26,9 +27,10 @@ def decision_tree_model(
     """
     Train and evaluate the Decision Tree model.
     """
+
     # Split data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
+        X, y, test_size=0.2, random_state=25
     )
 
     # Initialize and train custom decision tree
@@ -79,7 +81,7 @@ def random_forest_model(
     """
     # Split data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
+        X, y, test_size=0.33, random_state=42, shuffle=True
     )
 
     # Initialize and train random forest
@@ -171,6 +173,14 @@ def main():
     dataset = dataset_loader()
     X, y = dataset.data, dataset.target
 
+    if args.dataset == "iris":
+        print("Binning IRis")
+        for i in range(len(X)):
+            X[i] = [round(x) for x in X[i]]
+    else:
+        print(
+            f"Using {args.dataset} not handling binning for this dataset at this moment"
+        )
     # Define hyperparameters
     hyperParams = {
         "error_function": args.criterion,
